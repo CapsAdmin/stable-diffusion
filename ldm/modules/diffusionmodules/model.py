@@ -32,7 +32,17 @@ def get_timestep_embedding(timesteps, embedding_dim):
 
 def nonlinearity(x):
     # swish
-    return x*torch.sigmoid(x)
+    try:
+        t = torch.sigmoid(x)
+        x *= t
+        del t
+        return x
+    except RuntimeError:
+        dev = x.device
+        x = x.cpu()
+        x_ = torch.sigmoid(x) * x
+        x_ = x_.to(dev)
+        return x_
 
 
 def Normalize(in_channels, num_groups=32):
@@ -52,8 +62,13 @@ class Upsample(nn.Module):
 
     def forward(self, x):
         x = torch.nn.functional.interpolate(x, scale_factor=2.0, mode="nearest")
+        dev = x.device
         if self.with_conv:
+            try:
             x = self.conv(x)
+            except:
+                x = self.conv.cpu().to(torch.float32)(x.cpu().to(torch.float32)).to(dev).half()
+                self.conv.to(dev).half()
         return x
 
 
@@ -118,27 +133,45 @@ class ResnetBlock(nn.Module):
                                                     stride=1,
                                                     padding=0)
 
-    def forward(self, x, temb):
-        h = x
-        h = self.norm1(h)
+    def forward(self, x, temb, secondary_device=None):
+        dev = x.device  # store it on cpu
+        secondary_device = secondary_device if secondary_device is not None else torch.device("cpu")
+        precision = torch.float32 if secondary_device == torch.device("cpu") else torch.float16  # float32 for cpu
+        clear_fn = gc.collect if secondary_device == torch.device("cpu") else torch.cuda.empty_cache
+        x = x.cpu().to(precision)
+        h = x.to(secondary_device).to(precision)
+
+        clear_fn()
+        h = self.norm1.to(precision).to(secondary_device)(h)
+        clear_fn()
         h = nonlinearity(h)
-        h = self.conv1(h)
+        clear_fn()
+        h = self.conv1.to(precision).to(secondary_device)(h)
 
         if temb is not None:
-            h = h + self.temb_proj(nonlinearity(temb))[:,:,None,None]
+            h = h + self.temb_proj.to(secondary_device)(nonlinearity(temb))[:, :, None, None]
 
-        h = self.norm2(h)
+        clear_fn()
+        h = self.norm2.to(precision).to(secondary_device)(h)
+        clear_fn()
         h = nonlinearity(h)
-        h = self.dropout(h)
-        h = self.conv2(h)
+        clear_fn()
+        h = self.dropout.to(precision)(h)
+        clear_fn()
+        h = self.conv2.to(precision).to(secondary_device)(h)
+        clear_fn()
 
         if self.in_channels != self.out_channels:
             if self.use_conv_shortcut:
-                x = self.conv_shortcut(x)
+                x = self.conv_shortcut.to(precision).to(secondary_device)(x.to(secondary_device))
             else:
-                x = self.nin_shortcut(x)
-
-        return x+h
+                x = self.nin_shortcut.to(precision).to(secondary_device)(x.to(secondary_device))
+        else:
+            x = x.to(secondary_device)
+        x = x + h
+        del h
+        clear_fn()
+        return x.half().to(dev)
 
 
 class LinAttnBlock(LinearAttention):
@@ -174,32 +207,57 @@ class AttnBlock(nn.Module):
                                         stride=1,
                                         padding=0)
 
-
-    def forward(self, x):
+    def forward(self, x, secondary_device=None):
+        dev = x.device
+        precision = x.dtype
         h_ = x
-        h_ = self.norm(h_)
-        q = self.q(h_)
-        k = self.k(h_)
-        v = self.v(h_)
+        x = x.cpu()
+        h_ = self.norm.to(precision).to(dev)(h_)
+        q = self.q.to(precision).to(dev)(h_)
+        k = self.k.to(precision).to(dev)(h_)
+        v = self.v.to(precision).to(dev)(h_)
+        del h_
+
+        secondary_device = secondary_device if secondary_device is not None else torch.device("cpu")
+        sec_precision = torch.float32 if secondary_device == torch.device("cpu") else torch.float16  # float32 for cpu
 
         # compute attention
-        b,c,h,w = q.shape
-        q = q.reshape(b,c,h*w)
-        q = q.permute(0,2,1)   # b,hw,c
-        k = k.reshape(b,c,h*w) # b,c,hw
-        w_ = torch.bmm(q,k)     # b,hw,hw    w[b,i,j]=sum_c q[b,i,c]k[b,c,j]
-        w_ = w_ * (int(c)**(-0.5))
-        w_ = torch.nn.functional.softmax(w_, dim=2)
+        b, c, h, w = q.shape
+        q = q.reshape(b, c, h * w).permute(0, 2, 1)
+        # q = q.permute(0, 2, 1)  # b,hw,c
+        k = k.reshape(b, c, h * w)  # b,c,hw
+        h_ = torch.zeros_like(k, device=secondary_device, dtype=sec_precision)
+        v = v.reshape(b, c, h * w)
 
+        stats = torch.cuda.memory_stats(dev)
+        mem_active = stats['active_bytes.all.current']
+        mem_reserved = stats['reserved_bytes.all.current']
+        mem_free_cuda, _ = torch.cuda.mem_get_info(dev)
+        mem_free_torch = mem_reserved - mem_active
+        mem_free_total = mem_free_cuda + mem_free_torch
+
+        s1 = (b * h * w * 2 * h * w) * 2  # 2 bmms
+        s2 = (b * ((h * w) ** 2) * 2) * 2  # 2 softmaxes
+        s3 = (b * c * h * w * 2) * 3  # zeros_like, empty_like, empty_strided
+        s = 2 * (s1 + s2 + s3)  # 2 because of small allocations which don't really matter
+        chunk_split = int((s // mem_free_total) + 1) if s > mem_free_total else 1
+        mp = q.shape[1] // chunk_split
+
+        for i in range(0, q.shape[1], mp):
+            w1 = torch.bmm(q[:, i:i + mp], k)  # b,hw,hw    w[b,i,j]=sum_c q[b,i,c]k[b,c,j]
+            w1 = w1 * (int(c) ** (-0.5))
+            w1 = torch.nn.functional.softmax(w1, dim=2, dtype=precision)
         # attend to values
-        v = v.reshape(b,c,h*w)
-        w_ = w_.permute(0,2,1)   # b,hw,hw (first hw of k, second of q)
-        h_ = torch.bmm(v,w_)     # b, c,hw (hw of q) h_[b,c,j] = sum_i v[b,c,i] w_[b,i,j]
-        h_ = h_.reshape(b,c,h,w)
+            w1 = w1.permute(0, 2, 1)  # b,hw,hw (first hw of k, second of q)
 
-        h_ = self.proj_out(h_)
+            h_[:, :, i:i + mp] = torch.bmm(v, w1).to(
+                secondary_device).to(sec_precision)  # b, c,hw (hw of q) h_[b,c,j] = sum_i v[b,c,i] w_[b,i,j]
 
-        return x+h_
+        h_ = h_.reshape(b, c, h, w)
+
+        h_ = self.proj_out.to(secondary_device).to(sec_precision)(h_).to(precision).to(dev)
+
+        return x.to(dev) + h_
 
 
 def make_attn(in_channels, attn_type="vanilla"):
@@ -541,18 +599,33 @@ class Decoder(nn.Module):
 
         # z to block_in
         h = self.conv_in(z)
+        del z
 
         # middle
-        h = self.mid.block_1(h, temb)
-        h = self.mid.attn_1(h)
-        h = self.mid.block_2(h, temb)
+        h = self.mid.block_1(h, temb, secondary_device=h.device)
+        try:
+            h = self.mid.attn_1(h, secondary_device=h.device)
+        except RuntimeError as e:
+            print(e)
+            h = self.mid.attn_1(h, secondary_device=torch.device("cpu"))
 
+        h = self.mid.block_2(h, temb, secondary_device=h.device)
         # upsampling
         for i_level in reversed(range(self.num_resolutions)):
-            for i_block in range(self.num_res_blocks+1):
-                h = self.up[i_level].block[i_block](h, temb)
+            for i_block in range(self.num_res_blocks + 1):
+                try:
+                    h = self.up[i_level].block[i_block](h, temb, secondary_device=torch.device(0))
+                except RuntimeError as e:
+                    print(e)
+                    torch.cuda.empty_cache()
+                    gc.collect()
+                    h = self.up[i_level].block[i_block](h, temb, secondary_device=torch.device("cpu"))
                 if len(self.up[i_level].attn) > 0:
                     h = self.up[i_level].attn[i_block](h)
+                    t = h
+                    h = self.up[i_level].attn[i_block](t)
+                    del t
+
             if i_level != 0:
                 h = self.up[i_level].upsample(h)
 
@@ -682,7 +755,15 @@ class LatentRescaler(nn.Module):
         for block in self.res_block1:
             x = block(x, None)
         x = torch.nn.functional.interpolate(x, size=(int(round(x.shape[2]*self.factor)), int(round(x.shape[3]*self.factor))))
-        x = self.attn(x)
+        try:
+            x_ = self.attn(x, secondary_device=x.device)
+            x = x_
+            del x_
+        except RuntimeError as e:
+            print(e)
+            x = self.attn(x, secondary_device="cpu")
+        torch.cuda.empty_cache()
+        gc.collect()
         for block in self.res_block2:
             x = block(x, None)
         x = self.conv_out(x)
