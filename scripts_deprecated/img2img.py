@@ -1,26 +1,23 @@
 """make variations of input image"""
 
+import argparse, os, sys, glob
 import PIL
-import argparse
-import glob
-import numpy as np
-import os
-import sys
-import time
 import torch
-from PIL import Image
-from contextlib import nullcontext
-from einops import rearrange, repeat
-from itertools import islice
+import numpy as np
 from omegaconf import OmegaConf
-from pytorch_lightning import seed_everything
-from torch import autocast
-from torchvision.utils import make_grid
+from PIL import Image
 from tqdm import tqdm, trange
+from itertools import islice
+from einops import rearrange, repeat
+from torchvision.utils import make_grid
+from torch import autocast
+from contextlib import nullcontext
+import time
+from pytorch_lightning import seed_everything
 
+from ldm.util import instantiate_from_config
 from ldm.models.diffusion.ddim import DDIMSampler
 from ldm.models.diffusion.plms import PLMSSampler
-from ldm.util import instantiate_from_config
 
 
 def chunk(it, size):
@@ -57,7 +54,7 @@ def load_img(path):
     image = np.array(image).astype(np.float32) / 255.0
     image = image[None].transpose(0, 3, 1, 2)
     image = torch.from_numpy(image)
-    return 2. * image - 1.
+    return 2.*image - 1.
 
 
 def main():
@@ -128,6 +125,7 @@ def main():
         default=1,
         help="sample this often",
     )
+
     parser.add_argument(
         "--C",
         type=int,
@@ -140,18 +138,21 @@ def main():
         default=8,
         help="downsampling factor, most often 8 or 16",
     )
+
     parser.add_argument(
         "--n_samples",
         type=int,
         default=2,
         help="how many samples to produce for each given prompt. A.k.a batch size",
     )
+
     parser.add_argument(
         "--n_rows",
         type=int,
         default=0,
         help="rows in the grid (default: n_samples)",
     )
+
     parser.add_argument(
         "--scale",
         type=float,
@@ -165,6 +166,7 @@ def main():
         default=0.75,
         help="strength for noising/unnoising. 1.0 corresponds to full destruction of information in init image",
     )
+
     parser.add_argument(
         "--from-file",
         type=str,
@@ -173,13 +175,13 @@ def main():
     parser.add_argument(
         "--config",
         type=str,
-        default="configs/stable-diffusion/v1-inference.yaml",
+        default="models/ldm/text2img-large/config.yaml",
         help="path to config which constructs model",
     )
     parser.add_argument(
         "--ckpt",
         type=str,
-        default="models/ldm/stable-diffusion-v1/model.ckpt",
+        default="models/ldm/text2img-large/model.ckpt",
         help="path to checkpoint of model",
     )
     parser.add_argument(
@@ -206,7 +208,7 @@ def main():
     model = model.to(device)
 
     if opt.plms:
-        raise NotImplementedError("PLMS sampler not (yet) supported")
+        raise NotImplementedError("check for plms")
         sampler = PLMSSampler(model)
     else:
         sampler = DDIMSampler(model)
@@ -259,10 +261,10 @@ def main():
                         c = model.get_learned_conditioning(prompts)
 
                         # encode (scaled latent)
-                        z_enc = sampler.stochastic_encode(init_latent, torch.tensor([t_enc] * batch_size).to(device))
+                        z_enc = sampler.stochastic_encode(init_latent, torch.tensor([t_enc]*batch_size).to(device))
                         # decode it
                         samples = sampler.decode(z_enc, c, t_enc, unconditional_guidance_scale=opt.scale,
-                                                 unconditional_conditioning=uc, )
+                                                 unconditional_conditioning=uc,)
 
                         x_samples = model.decode_first_stage(samples)
                         x_samples = torch.clamp((x_samples + 1.0) / 2.0, min=0.0, max=1.0)
@@ -289,6 +291,7 @@ def main():
                 toc = time.time()
 
     print(f"Your samples are ready and waiting for you here: \n{outpath} \n"
+          f"Sampling took {toc - tic}s, i.e., produced {opt.n_iter * opt.n_samples / (toc - tic):.2f} samples/sec."
           f" \nEnjoy.")
 
 

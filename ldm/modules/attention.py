@@ -226,10 +226,13 @@ class CrossAttention(nn.Module):
 
 class BasicTransformerBlock(nn.Module):
     def __init__(self, dim, n_heads, d_head, dropout=0., superfastmode=True, context_dim=None, gated_ff=True,
-                 checkpoint=True):
+                 checkpoint=True,
+                 disable_self_attn=False):
         super().__init__()
+        self.disable_self_attn = disable_self_attn
         self.attn1 = CrossAttention(query_dim=dim, heads=n_heads, dim_head=d_head,
-                                    dropout=dropout, superfastmode=superfastmode)  # is a self-attention
+                                    dropout=dropout,
+                                    context_dim=context_dim if self.disable_self_attn else None, superfastmode=superfastmode)  # is a self-attention if not self.disable_self_attn
         self.ff = FeedForward(dim, dropout=dropout, glu=gated_ff)
         self.attn2 = CrossAttention(query_dim=dim, context_dim=context_dim,
                                     heads=n_heads, dim_head=d_head, dropout=dropout, superfastmode=superfastmode)
@@ -242,7 +245,7 @@ class BasicTransformerBlock(nn.Module):
         return checkpoint(self._forward, (x, speed_mp, context), self.parameters(), self.checkpoint)
 
     def _forward(self, x, speed_mp=None, context=None):
-        x = self.attn1(self.norm1(x), speed_mp=speed_mp, dtype=x.dtype) + x
+        x = self.attn1(self.norm1(x), speed_mp=speed_mp, dtype=x.dtype, context=context if self.disable_self_attn else None) + x
         x = self.attn2(self.norm2(x), speed_mp=speed_mp, context=context, dtype=x.dtype) + x
         x = self.ff(self.norm3(x)) + x
         return x
@@ -258,7 +261,8 @@ class SpatialTransformer(nn.Module):
     """
 
     def __init__(self, in_channels, n_heads, d_head,
-                 depth=1, dropout=0., superfastmode=True, context_dim=None):
+                 depth=1, dropout=0., superfastmode=True, context_dim=None,
+                 disable_self_attn=False):
         super().__init__()
         self.in_channels = in_channels
         inner_dim = n_heads * d_head
@@ -272,7 +276,8 @@ class SpatialTransformer(nn.Module):
 
         self.transformer_blocks = nn.ModuleList(
             [BasicTransformerBlock(inner_dim, n_heads, d_head, superfastmode=superfastmode, dropout=dropout,
-                                   context_dim=context_dim)
+                                   context_dim=context_dim,
+                                   disable_self_attn=disable_self_attn)
              for _ in range(depth)]
         )
         self.proj_out = zero_module(nn.Conv2d(inner_dim,
@@ -287,9 +292,9 @@ class SpatialTransformer(nn.Module):
         x_in = x
         x = self.norm(x)
         x = self.proj_in(x)
-        x = rearrange(x, 'b c h w -> b (h w) c')
+        x = rearrange(x, 'b c h w -> b (h w) c').contiguous()
         for block in self.transformer_blocks:
             x = block(x, speed_mp=speed_mp, context=context)
-        x = rearrange(x, 'b (h w) c -> b c h w', h=h, w=w)
+        x = rearrange(x, 'b (h w) c -> b c h w', h=h, w=w).contiguous() # TODO: post merge, check
         x = self.proj_out(x)
         return x + x_in

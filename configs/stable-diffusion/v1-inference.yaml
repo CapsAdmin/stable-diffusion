@@ -15,7 +15,6 @@ model:
     conditioning_key: crossattn
     monitor: val/loss_simple_ema
     scale_factor: 0.18215
-    use_ema: False
 
     scheduler_config: # 10000 warmup steps
       target: ldm.lr_scheduler.LambdaLinearScheduler
@@ -56,12 +55,12 @@ model:
           out_ch: 3
           ch: 128
           ch_mult:
-            - 1
-            - 2
-            - 4
-            - 4
+          - 1
+          - 2
+          - 4
+          - 4
           num_res_blocks: 2
-          attn_resolutions: [ ]
+          attn_resolutions: []
           dropout: 0.0
         lossconfig:
           target: torch.nn.Identity

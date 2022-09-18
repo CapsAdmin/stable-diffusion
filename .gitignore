@@ -1,0 +1,8 @@
+*.ckpt
+*.zip
+models/ldm/inpainting_big/archive/data/*
+models/ldm/inpainting_big/archive/version
+models/ldm/inpainting_big/archive/data.pkl
+latent_diffusion.egg-info
+__pycache__
+outputs/
