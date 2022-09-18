@@ -1,284 +1,243 @@
-Development repository. Please see [CompVis/stable-diffusion](https://github.com/CompVis/stable-diffusion/) for the Stable Diffusion release.
+# Update: v1.0.5 even superfaster superbigger-res updated ultimate GUI mode edition, with k_diffusion samplers and CodeFormer and Upscalers (only in gradio)
 
-
----
-
-
-# Latent Diffusion Models
-[arXiv](https://arxiv.org/abs/2112.10752) | [BibTeX](#bibtex)
-
+<h1 align="center">Optimized Stable Diffusion</h1>
 <p align="center">
-<img src=assets/results.gif />
+    <img src="https://img.shields.io/github/last-commit/neonsecret/stable-diffusion?logo=Python&logoColor=green&style=for-the-badge"/>
+        <img src="https://img.shields.io/github/issues/neonsecret/stable-diffusion?logo=GitHub&style=for-the-badge"/>
+                <img src="https://img.shields.io/github/stars/neonsecret/stable-diffusion?logo=GitHub&style=for-the-badge"/>
+    <a href="https://colab.research.google.com/github/neonsecret/stable-diffusion/blob/main/optimized_colab.ipynb">
+      <img src="https://colab.research.google.com/assets/colab-badge.svg" alt="Open In Colab"/>
+    </a>
 </p>
 
+## THE GUI IS OUT <br>
 
+See [GUI Usage tutorial for dummies](GUI_TUTORIAL.md)
 
-[**High-Resolution Image Synthesis with Latent Diffusion Models**](https://arxiv.org/abs/2112.10752)<br/>
-[Robin Rombach](https://github.com/rromb)\*,
-[Andreas Blattmann](https://github.com/ablattmann)\*,
-[Dominik Lorenz](https://github.com/qp-qp)\,
-[Patrick Esser](https://github.com/pesser),
-[Björn Ommer](https://hci.iwr.uni-heidelberg.de/Staff/bommer)<br/>
-\* equal contribution
+## The hlky's webui version [is out](https://github.com/neonsecret/stable-diffusion-webui)
 
-<p align="center">
-<img src=assets/modelfigure.png />
-</p>
+## The peacasso GUI version [is out](https://github.com/neonsecret/neonpeacasso)
 
-## News
-### April 2022
-- Thanks to [Katherine Crowson](https://github.com/crowsonkb), classifier-free guidance received a ~2x speedup and the [PLMS sampler](https://arxiv.org/abs/2202.09778) is available. See also [this PR](https://github.com/CompVis/latent-diffusion/pull/51).
+## The gradio UI now has every feature on one page. See usage below.
 
-- Our 1.45B [latent diffusion LAION model](#text-to-image) was integrated into [Huggingface Spaces 🤗](https://huggingface.co/spaces) using [Gradio](https://github.com/gradio-app/gradio). Try out the Web Demo: [![Hugging Face Spaces](https://img.shields.io/badge/%F0%9F%A4%97%20Hugging%20Face-Spaces-blue)](https://huggingface.co/spaces/multimodalart/latentdiffusion)
+# The project is completely open-source and free, and is only maintained by me. If you want to support me, I have a [ko-fi](https://ko-fi.com/neonsecret)
 
-- More pre-trained LDMs are available: 
-  - A 1.45B [model](#text-to-image) trained on the [LAION-400M](https://arxiv.org/abs/2111.02114) database.
-  - A class-conditional model on ImageNet, achieving a FID of 3.6 when using [classifier-free guidance](https://openreview.net/pdf?id=qw8AKxfYbI) Available via a [colab notebook](https://colab.research.google.com/github/CompVis/latent-diffusion/blob/main/scripts/latent_imagenet_diffusion.ipynb) [![][colab]][colab-cin].
-  
-## Requirements
-A suitable [conda](https://conda.io/) environment named `ldm` can be created
-and activated with:
+### Warning: this requires gradio >= 3.3, be sure to install it or update it.
+### New update feature: added codeformer, will install itself automatically
 
+To keep up with the newest updates, make sure to run the `pip install --upgrade -r requirements.txt` to get all the newest dependencies
+
+## The superfast and low-vram mode have been updated. The latest results are: 2048x2048 on 8 gb vram and 3200x3200 on 24 gb.
+
+Below you can see the speed/resolution comparison table.
+<br>
+| resolution 	| steps 	| soft_limiter 	| time          	| vram 	| low vram mode 	|
+|------------	|-------	|----------	    |---------------	|------	|---------------	|
+| 512x512    	| 50    	| 100%     	    | 1.5 minutes   	| 4    	| no            	|
+| 512x512    	| 50    	| 100%     	    | 36 seconds    	| 8    	| no            	|
+| 512x512    	| 50    	| 100%     	    | 30 seconds    	| 10   	| no            	|
+| 512x512    	| 50    	| 100%     	    | 15 seconds    	| 24   	| no            	|
+| 1024x1024  	| 50    	| 100%     	    | 15 minutes    	| 4    	| no             	|
+| 1024x1024  	| 50    	| 100%     	    | 4 minutes     	| 8    	| no            	|
+| 1024x1024  	| 50    	| 100%     	    | 3 minutes      	| 10   	| no            	|
+| 1024x1024  	| 50    	| 100%     	    | 70 seconds    	| 24   	| no            	|
+| 2048x2048  	| 50    	| 100%    	    | 25 minutes       	| 8   	| no            	|
+| 2048x2048  	| 50    	| 100%    	    | 20 minutes       	| 10   	| no            	|
+| 2048x2048  	| 50    	| 100%     	    | 15 minutes 	    | 24   	| no            	|
+| 512x4096   	| 50    	| 100%     	    | 2 minutes     	| 24   	| no            	|
+| 3840x2176  	| 50     	| 100%     	    | 40 minutes    	| 24   	| no             	|
+| 3200x3200  	| 50     	| 100%     	    | 60 minutes    	| 24   	| no             	|
+<br>
+
+gpus used: gtx 1050 ti, rtx 3070, colab gpu, rtx 3090
+(huge thanks to @therustysmear for helping me in these tests)
+
+soft_limiter parameter limits vram usage, so that you can use your pc while generating images. 100% though allows the max sped.
+
+### How to generate so high-res images?
+The default mode already allows to generate as high-res as possible images, however, if you encounter OOM errors or want to go higher in resolution, disable it:
+
+Example cli command with txt2img and high-res mode:
 ```
-conda env create -f environment.yaml
-conda activate ldm
+python optimizedSD/optimized_txt2img.py --prompt "an apple" --config_path optimizedSD/v1-inference_lowvram.yaml --H 512 --W 512 --seed 27 --n_iter 1 --n_samples 1 --ddim_steps 50
 ```
-
-# Pretrained Models
-A general list of all available checkpoints is available in via our [model zoo](#model-zoo).
-If you use any of these models in your work, we are always happy to receive a [citation](#bibtex).
-
-## Text-to-Image
-![text2img-figure](assets/txt2img-preview.png) 
-
-
-Download the pre-trained weights (5.7GB)
+Example gradio command:
 ```
-mkdir -p models/ldm/text2img-large/
-wget -O models/ldm/text2img-large/model.ckpt https://ommer-lab.com/files/latent-diffusion/nitro/txt2img-f8-large/model.ckpt
+python optimizedSD/neongradio_ultimate.py
 ```
-and sample with
+Example gradio low-vram command:
 ```
-python scripts/txt2img.py --prompt "a virus monster is playing guitar, oil on canvas" --ddim_eta 0.0 --n_samples 4 --n_iter 4 --scale 5.0  --ddim_steps 50
+python optimizedSD/neongradio_ultimate.py --config_path optimizedSD/v1-inference_lowvram.yaml
 ```
-This will save each sample individually as well as a grid of size `n_iter` x `n_samples` at the specified output location (default: `outputs/txt2img-samples`).
-Quality, sampling speed and diversity are best controlled via the `scale`, `ddim_steps` and `ddim_eta` arguments.
-As a rule of thumb, higher values of `scale` produce better samples at the cost of a reduced output diversity.   
-Furthermore, increasing `ddim_steps` generally also gives higher quality samples, but returns are diminishing for values > 250.
-Fast sampling (i.e. low values of `ddim_steps`) while retaining good quality can be achieved by using `--ddim_eta 0.0`.  
-Faster sampling (i.e. even lower values of `ddim_steps`) while retaining good quality can be achieved by using `--ddim_eta 0.0` and `--plms` (see [Pseudo Numerical Methods for Diffusion Models on Manifolds](https://arxiv.org/abs/2202.09778)).
+the `--config_path optimizedSD/v1-inference_lowvram.yaml` argument enables a low-vram mode which allows to generate bigger-resolution images at the slight cost of the speed.
 
-#### Beyond 256²
+### Description
 
-For certain inputs, simply running the model in a convolutional fashion on larger features than it was trained on
-can sometimes result in interesting results. To try it out, tune the `H` and `W` arguments (which will be integer-divided
-by 8 in order to calculate the corresponding latent size), e.g. run
+This repo is a modified version of the Stable Diffusion repo, optimized to use less VRAM than the original by
+sacrificing inference speed.
 
-```
-python scripts/txt2img.py --prompt "a sunset behind a mountain range, vector image" --ddim_eta 1.0 --n_samples 1 --n_iter 1 --H 384 --W 1024 --scale 5.0  
-```
-to create a sample of size 384x1024. Note, however, that controllability is reduced compared to the 256x256 setting. 
+To achieve this, the stable diffusion model is fragmented into four parts which are sent to the GPU only when needed.
+After the calculation is done, they are moved back to the CPU. This allows us to run a bigger model while requiring less
+VRAM.
 
-The example below was generated using the above command. 
-![text2img-figure-conv](assets/txt2img-convsample.png)
+Also I invented the sliced atttention technique, which allows to push the model's abilities even further. It works by automatically determining the slice size from your vram and image size and then allocating it one by one accordingly. 
+You can practically generate any image size, it just depends on the generation speed you are willing to sacrifice.
+
+<h1 align="center">Installation</h1>
 
 
-
-## Inpainting
-![inpainting](assets/inpainting.png)
-
-Download the pre-trained weights
-```
-wget -O models/ldm/inpainting_big/last.ckpt https://heibox.uni-heidelberg.de/f/4d9ac7ea40c64582b7c9/?dl=1
-```
-
-and sample with
-```
-python scripts/inpaint.py --indir data/inpainting_examples/ --outdir outputs/inpainting_results
-```
-`indir` should contain images `*.png` and masks `<image_fname>_mask.png` like
-the examples provided in `data/inpainting_examples`.
-
-## Class-Conditional ImageNet
-
-Available via a [notebook](scripts/latent_imagenet_diffusion.ipynb) [![][colab]][colab-cin].
-![class-conditional](assets/birdhouse.png)
-
-[colab]: <https://colab.research.google.com/assets/colab-badge.svg>
-[colab-cin]: <https://colab.research.google.com/github/CompVis/latent-diffusion/blob/main/scripts/latent_imagenet_diffusion.ipynb>
+You can clone this repo and follow the same installation steps as the original (mainly creating the conda environment and
+placing the weights at the specified location). <br>
+So run: <br>
+`conda env create -f environment.yaml` <br>
+`conda activate ldm`
 
 
-## Unconditional Models
+<h2 align="center">Additional steps for AMD Cards</h2>
 
-We also provide a script for sampling from unconditional LDMs (e.g. LSUN, FFHQ, ...). Start it via
+After activating your conda environment, you have to update torch and torchvision wheels which were built with ROCm support (only on linux):
 
-```shell script
-CUDA_VISIBLE_DEVICES=<GPU_ID> python scripts/sample_diffusion.py -r models/ldm/<model_spec>/model.ckpt -l <logdir> -n <\#samples> --batch_size <batch_size> -c <\#ddim steps> -e <\#eta> 
-```
+`pip3 install --upgrade torch torchvision --extra-index-url https://download.pytorch.org/whl/rocm5.1.1`
 
-# Train your own LDMs
+<h2 align="center">Docker</h2>
 
-## Data preparation
+Alternatively, if you prefer to use Docker, you can do the following:
 
-### Faces 
-For downloading the CelebA-HQ and FFHQ datasets, proceed as described in the [taming-transformers](https://github.com/CompVis/taming-transformers#celeba-hq) 
-repository.
+1. Install [Docker](https://docs.docker.com/engine/install/)
+   , [Docker Compose plugin](https://docs.docker.com/compose/install/),
+   and [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker)
+2. Clone this repo to, e.g., `~/stable-diffusion`
+3. Put your downloaded `model.ckpt` file into `~/sd-data` (it's a relative path, you can change it
+   in `docker-compose.yml`)
+4. `cd` into `~/stable-diffusion` and execute `docker compose up --build`
 
-### LSUN 
+This will launch gradio on port 7860 with txt2img. You can also use `docker compose run` to execute other Python
+scripts.
 
-The LSUN datasets can be conveniently downloaded via the script available [here](https://github.com/fyu/lsun).
-We performed a custom split into training and validation images, and provide the corresponding filenames
-at [https://ommer-lab.com/files/lsun.zip](https://ommer-lab.com/files/lsun.zip). 
-After downloading, extract them to `./data/lsun`. The beds/cats/churches subsets should
-also be placed/symlinked at `./data/lsun/bedrooms`/`./data/lsun/cats`/`./data/lsun/churches`, respectively.
+<h1 align="center">Usage</h1>
 
-### ImageNet
-The code will try to download (through [Academic
-Torrents](http://academictorrents.com/)) and prepare ImageNet the first time it
-is used. However, since ImageNet is quite large, this requires a lot of disk
-space and time. If you already have ImageNet on your disk, you can speed things
-up by putting the data into
-`${XDG_CACHE}/autoencoders/data/ILSVRC2012_{split}/data/` (which defaults to
-`~/.cache/autoencoders/data/ILSVRC2012_{split}/data/`), where `{split}` is one
-of `train`/`validation`. It should have the following structure:
+## img2img
 
-```
-${XDG_CACHE}/autoencoders/data/ILSVRC2012_{split}/data/
-├── n01440764
-│   ├── n01440764_10026.JPEG
-│   ├── n01440764_10027.JPEG
-│   ├── ...
-├── n01443537
-│   ├── n01443537_10007.JPEG
-│   ├── n01443537_10014.JPEG
-│   ├── ...
-├── ...
-```
+- `img2img` can generate _512x512 images from a prior image and prompt on a 4GB VRAM GPU in under 20 seconds per image_
+  on an RTX 2060.
 
-If you haven't extracted the data, you can also place
-`ILSVRC2012_img_train.tar`/`ILSVRC2012_img_val.tar` (or symlinks to them) into
-`${XDG_CACHE}/autoencoders/data/ILSVRC2012_train/` /
-`${XDG_CACHE}/autoencoders/data/ILSVRC2012_validation/`, which will then be
-extracted into above structure without downloading it again.  Note that this
-will only happen if neither a folder
-`${XDG_CACHE}/autoencoders/data/ILSVRC2012_{split}/data/` nor a file
-`${XDG_CACHE}/autoencoders/data/ILSVRC2012_{split}/.ready` exist. Remove them
-if you want to force running the dataset preparation again.
+- The maximum size that can fit on 6GB GPU (RTX 2060) is around 576x768.
 
+- For example, the following command will generate 20 512x512 images:
 
-## Model Training
+`python optimizedSD/optimized_img2img.py --prompt "Austrian alps" --init-img ~/sketch-mountains-input.jpg --strength 0.8 --n_iter 2 --n_samples 10 --H 512 --W 512`
 
-Logs and checkpoints for trained models are saved to `logs/<START_DATE_AND_TIME>_<config_spec>`.
+## txt2img
 
-### Training autoencoder models
+- `txt2img` can generate _512x512 images from a prompt on a 2GB VRAM GPU in under 25 seconds per image_.
 
-Configs for training a KL-regularized autoencoder on ImageNet are provided at `configs/autoencoder`.
-Training can be started by running
-```
-CUDA_VISIBLE_DEVICES=<GPU_ID> python main.py --base configs/autoencoder/<config_spec>.yaml -t --gpus 0,    
-```
-where `config_spec` is one of {`autoencoder_kl_8x8x64`(f=32, d=64), `autoencoder_kl_16x16x16`(f=16, d=16), 
-`autoencoder_kl_32x32x4`(f=8, d=4), `autoencoder_kl_64x64x3`(f=4, d=3)}.
+- For example, the following command will generate 20 512x512 images:
 
-For training VQ-regularized models, see the [taming-transformers](https://github.com/CompVis/taming-transformers) 
-repository.
+`python optimizedSD/optimized_txt2img.py --prompt "Cyberpunk style image of a Telsa car reflection in rain" --H 512 --W 512 --seed 27 --n_iter 2 --n_samples 10 --ddim_steps 50`
 
-### Training LDMs 
+## inpainting
 
-In ``configs/latent-diffusion/`` we provide configs for training LDMs on the LSUN-, CelebA-HQ, FFHQ and ImageNet datasets. 
-Training can be started by running
+- `Inpainting` can fill masked parts of an image based on a given prompt. It can inpaint 512x512 images while using under 2GB of VRAM.
 
-```shell script
-CUDA_VISIBLE_DEVICES=<GPU_ID> python main.py --base configs/latent-diffusion/<config_spec>.yaml -t --gpus 0,
-``` 
+- To launch the gradio interface for inpainting, run `python optimizedSD/inpaint_gradio.py`. The mask for the image can
+  be drawn on the selected image using the brush tool.
 
-where ``<config_spec>`` is one of {`celebahq-ldm-vq-4`(f=4, VQ-reg. autoencoder, spatial size 64x64x3),`ffhq-ldm-vq-4`(f=4, VQ-reg. autoencoder, spatial size 64x64x3),
-`lsun_bedrooms-ldm-vq-4`(f=4, VQ-reg. autoencoder, spatial size 64x64x3),
-`lsun_churches-ldm-vq-4`(f=8, KL-reg. autoencoder, spatial size 32x32x4),`cin-ldm-vq-8`(f=8, VQ-reg. autoencoder, spatial size 32x32x4)}.
+- The results are not yet perfect but can be improved by using a combination of prompt weighting, prompt engineering and
+  testing out multiple values of the `--strength` argument.
 
-# Model Zoo 
+- _Suggestions to improve the inpainting algorithm are most welcome_.
 
-## Pretrained Autoencoding Models
-![rec2](assets/reconstruction2.png)
+## img2img interpolation
 
-All models were trained until convergence (no further substantial improvement in rFID).
+- `img2img_interpolate.py` creates an animation of image transformation using a text prompt
 
-| Model                   | rFID vs val | train steps           |PSNR           | PSIM          | Link                                                                                                                                                  | Comments              
-|-------------------------|------------|----------------|----------------|---------------|-------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------|
-| f=4, VQ (Z=8192, d=3)   | 0.58       | 533066 | 27.43  +/- 4.26 | 0.53 +/- 0.21 |     https://ommer-lab.com/files/latent-diffusion/vq-f4.zip                   |  |
-| f=4, VQ (Z=8192, d=3)   | 1.06       | 658131 | 25.21 +/-  4.17 | 0.72 +/- 0.26 | https://heibox.uni-heidelberg.de/f/9c6681f64bb94338a069/?dl=1  | no attention          |
-| f=8, VQ (Z=16384, d=4)  | 1.14       | 971043 | 23.07 +/- 3.99 | 1.17 +/- 0.36 |       https://ommer-lab.com/files/latent-diffusion/vq-f8.zip                     |                       |
-| f=8, VQ (Z=256, d=4)    | 1.49       | 1608649 | 22.35 +/- 3.81 | 1.26 +/- 0.37 |   https://ommer-lab.com/files/latent-diffusion/vq-f8-n256.zip |  
-| f=16, VQ (Z=16384, d=8) | 5.15       | 1101166 | 20.83 +/- 3.61 | 1.73 +/- 0.43 |             https://heibox.uni-heidelberg.de/f/0e42b04e2e904890a9b6/?dl=1                        |                       |
-|                         |            |  |                |               |                                                                                                                                                    |                       |
-| f=4, KL                 | 0.27       | 176991 | 27.53 +/- 4.54 | 0.55 +/- 0.24 |     https://ommer-lab.com/files/latent-diffusion/kl-f4.zip                                   |                       |
-| f=8, KL                 | 0.90       | 246803 | 24.19 +/- 4.19 | 1.02 +/- 0.35 |             https://ommer-lab.com/files/latent-diffusion/kl-f8.zip                            |                       |
-| f=16, KL     (d=16)     | 0.87       | 442998 | 24.08 +/- 4.22 | 1.07 +/- 0.36 |      https://ommer-lab.com/files/latent-diffusion/kl-f16.zip                                  |                       |
- | f=32, KL     (d=64)     | 2.04       | 406763 | 22.27 +/- 3.93 | 1.41 +/- 0.40 |             https://ommer-lab.com/files/latent-diffusion/kl-f32.zip                            |                       |
+- To launch the gradio interface for inpainting, run `python optimizedSD/img2img_interpolate.py`. The mask for the image can
+  be drawn on the selected image using the brush tool.
 
-### Get the models
-
-Running the following script downloads und extracts all available pretrained autoencoding models.   
-```shell script
-bash scripts/download_first_stages.sh
-```
-
-The first stage models can then be found in `models/first_stage_models/<model_spec>`
+- The results are not yet perfect but can be improved by using a combination of prompt weighting, prompt engineering and
+  testing out multiple values of the `--strength` argument.
 
 
+<h1 align="center">Using the Gradio GUI</h1>
 
-## Pretrained LDMs
-| Datset                          |   Task    | Model        | FID           | IS              | Prec | Recall | Link                                                                                                                                                                                   | Comments                                        
-|---------------------------------|------|--------------|---------------|-----------------|------|------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|-------------------------------------------------|
-| CelebA-HQ                       | Unconditional Image Synthesis    |  LDM-VQ-4 (200 DDIM steps, eta=0)| 5.11 (5.11)          | 3.29            | 0.72    | 0.49 |    https://ommer-lab.com/files/latent-diffusion/celeba.zip     |                                                 |  
-| FFHQ                            | Unconditional Image Synthesis    |  LDM-VQ-4 (200 DDIM steps, eta=1)| 4.98 (4.98)  | 4.50 (4.50)   | 0.73 | 0.50 |              https://ommer-lab.com/files/latent-diffusion/ffhq.zip                                              |                                                 |
-| LSUN-Churches                   | Unconditional Image Synthesis   |  LDM-KL-8 (400 DDIM steps, eta=0)| 4.02 (4.02) | 2.72 | 0.64 | 0.52 |         https://ommer-lab.com/files/latent-diffusion/lsun_churches.zip        |                                                 |  
-| LSUN-Bedrooms                   | Unconditional Image Synthesis   |  LDM-VQ-4 (200 DDIM steps, eta=1)| 2.95 (3.0)          | 2.22 (2.23)| 0.66 | 0.48 | https://ommer-lab.com/files/latent-diffusion/lsun_bedrooms.zip |                                                 |  
-| ImageNet                        | Class-conditional Image Synthesis | LDM-VQ-8 (200 DDIM steps, eta=1) | 7.77(7.76)* /15.82** | 201.56(209.52)* /78.82** | 0.84* / 0.65** | 0.35* / 0.63** |   https://ommer-lab.com/files/latent-diffusion/cin.zip                                                                   | *: w/ guiding, classifier_scale 10  **: w/o guiding, scores in bracket calculated with script provided by [ADM](https://github.com/openai/guided-diffusion) |   
-| Conceptual Captions             |  Text-conditional Image Synthesis | LDM-VQ-f4 (100 DDIM steps, eta=0) | 16.79         | 13.89           | N/A | N/A |              https://ommer-lab.com/files/latent-diffusion/text2img.zip                                | finetuned from LAION                            |   
-| OpenImages                      | Super-resolution   | LDM-VQ-4     | N/A            | N/A               | N/A    | N/A    |                                    https://ommer-lab.com/files/latent-diffusion/sr_bsr.zip                                    | BSR image degradation                           |
-| OpenImages                      | Layout-to-Image Synthesis    | LDM-VQ-4 (200 DDIM steps, eta=0) | 32.02         | 15.92           | N/A    | N/A    |                  https://ommer-lab.com/files/latent-diffusion/layout2img_model.zip                                           |                                                 | 
-| Landscapes      |  Semantic Image Synthesis   | LDM-VQ-4  | N/A             | N/A               | N/A    | N/A    |           https://ommer-lab.com/files/latent-diffusion/semantic_synthesis256.zip                                    |                                                 |
-| Landscapes       |  Semantic Image Synthesis   | LDM-VQ-4  | N/A             | N/A               | N/A    | N/A    |           https://ommer-lab.com/files/latent-diffusion/semantic_synthesis.zip                                    |             finetuned on resolution 512x512                                     |
+- You can also use the built-in gradio interface for `img2img`, `txt2img` & `inpainting` instead of the command line
+  interface. Activate the conda environment and install the latest version of gradio using `pip install gradio`,
 
+- Run the ultimate UI using `python optimizedSD/neongradio_ultimate.py`. All features available on one tab.
 
-### Get the models
+- img2img has a feature to crop input images. Look for the pen symbol in the image box after selecting the
+  image.
 
-The LDMs listed above can jointly be downloaded and extracted via
+<h1 align="center">Arguments</h1>
 
-```shell script
-bash scripts/download_models.sh
-```
+## `--seed`
 
-The models can then be found in `models/ldm/<model_spec>`.
+**Seed for image generation**, can be used to reproduce previously generated images. Defaults to a random seed if
+unspecified.
 
+- The code will give the seed number along with each generated image. To generate the same image again, just specify the
+  seed using `--seed` argument. Images are saved with its seed number as its name by default.
 
+- For example if the seed number for an image is `1234` and it's the 55th image in the folder, the image name will be
+  named `seed_1234_00055.png`.
 
-## Coming Soon...
+## `--n_samples`
 
-* More inference scripts for conditional LDMs.
-* In the meantime, you can play with our colab notebook https://colab.research.google.com/drive/1xqzUi2iXQXDqXBHQGP9Mqt2YrYW6cx-J?usp=sharing
+**Batch size/amount of images to generate at once.**
 
-## Comments 
+- To get the lowest inference time per image, use the maximum batch size `--n_samples` that can fit on the GPU.
+  Inference time per image will reduce on increasing the batch size, but the required VRAM will increase.
 
-- Our codebase for the diffusion models builds heavily on [OpenAI's ADM codebase](https://github.com/openai/guided-diffusion)
-and [https://github.com/lucidrains/denoising-diffusion-pytorch](https://github.com/lucidrains/denoising-diffusion-pytorch). 
-Thanks for open-sourcing!
+- If you get a CUDA out of memory error, try reducing the batch size `--n_samples`. If it doesn't work, the other option
+  is to reduce the image width `--W` or height `--H` or both.
 
-- The implementation of the transformer encoder is from [x-transformers](https://github.com/lucidrains/x-transformers) by [lucidrains](https://github.com/lucidrains?tab=repositories). 
+## `--n_iter`
 
+**Run _x_ amount of times**
 
-## BibTeX
+- Equivalent to running the script n_iter number of times. Only difference is that the model is loaded only once per
+  n_iter iterations. Unlike `n_samples`, reducing it doesn't have an effect on VRAM required or inference time.
 
-```
-@misc{rombach2021highresolution,
-      title={High-Resolution Image Synthesis with Latent Diffusion Models}, 
-      author={Robin Rombach and Andreas Blattmann and Dominik Lorenz and Patrick Esser and Björn Ommer},
-      year={2021},
-      eprint={2112.10752},
-      archivePrefix={arXiv},
-      primaryClass={cs.CV}
-}
-```
+## `--H` & `--W`
 
+**Height & width of the generated image.**
 
+- Both height and width should be a multiple of 64.
+
+## `--turbo`
+
+**Increases inference speed at the cost of extra VRAM usage.**
+
+- Using this argument increases the inference speed by using around 1GB of extra GPU VRAM. It is especially effective
+  when generating a small batch of images (~ 1 to 4) images. It takes under 25 seconds for txt2img and 15 seconds for
+  img2img (on an RTX 2060, excluding the time to load the model). Use it on larger batch sizes if GPU VRAM available.
+
+## `--precision autocast` or `--precision full`
+
+**Whether to use `full` or `mixed` precision**
+
+- Mixed Precision is enabled by default. If you don't have a GPU with tensor cores (any GTX 10 series card), you may not
+  be able use mixed precision. Use the `--precision full` argument to disable it.
+
+## `--format png` or `--format jpg`
+
+**Output image format**
+
+- The default output format is `png`. While `png` is lossless, it takes up a lot of space (unless large portions of the
+  image happen to be a single colour). Use lossy `jpg` to get smaller image file sizes.
+
+## `--unet_bs`
+
+**Batch size for the unet model**
+
+- Takes up a lot of extra RAM for **very little improvement** in inference time. `unet_bs` > 1 is not recommended!
+
+- Should generally be a multiple of 2x(n_samples)
+
+<h1 align="center">Weighted Prompts</h1>
+
+- Prompts can also be weighted to put relative emphasis on certain words.
+  eg. `--prompt tabby cat:0.25 white duck:0.75 hybrid`.
+
+- The number followed by the colon represents the weight given to the words before the colon. The weights can be both
+  fractions or integers.
