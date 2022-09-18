@@ -56,11 +56,6 @@ def load_img(path):
     image = torch.from_numpy(image)
     return 2.*image - 1.
 
-def downloadToCPU(model):
-    mem = torch.cuda.memory_allocated() / 1e6
-    model.to("cpu")
-    while torch.cuda.memory_allocated() / 1e6 >= mem:
-        time.sleep(1)
 
 def main():
     parser = argparse.ArgumentParser()
@@ -147,7 +142,7 @@ def main():
     parser.add_argument(
         "--n_samples",
         type=int,
-        default=1,
+        default=2,
         help="how many samples to produce for each given prompt. A.k.a batch size",
     )
 
@@ -180,13 +175,13 @@ def main():
     parser.add_argument(
         "--config",
         type=str,
-        default="models/ldm/text2img-large/config.yaml",
+        default="logs/f8-kl-clip-encoder-256x256-run1/configs/2022-06-01T22-11-40-project.yaml",
         help="path to config which constructs model",
     )
     parser.add_argument(
         "--ckpt",
         type=str,
-        default="models/ldm/text2img-large/model.ckpt",
+        default="logs/f8-kl-clip-encoder-256x256-run1/checkpoints/last.ckpt",
         help="path to checkpoint of model",
     )
     parser.add_argument(
@@ -244,9 +239,6 @@ def main():
     init_image = repeat(init_image, '1 ... -> b ...', b=batch_size)
     init_latent = model.get_first_stage_encoding(model.encode_first_stage(init_image))  # move to latent space
 
-    if torch.cuda.is_available():
-        downloadToCPU(model)
-
     sampler.make_schedule(ddim_num_steps=opt.ddim_steps, ddim_eta=opt.ddim_eta, verbose=False)
 
     assert 0. <= opt.strength <= 1., 'can only work with strength in [0.0, 1.0]'
@@ -261,9 +253,6 @@ def main():
                 all_samples = list()
                 for n in trange(opt.n_iter, desc="Sampling"):
                     for prompts in tqdm(data, desc="data"):
-
-                        model.to(device)
-
                         uc = None
                         if opt.scale != 1.0:
                             uc = model.get_learned_conditioning(batch_size * [""])
@@ -287,11 +276,6 @@ def main():
                                     os.path.join(sample_path, f"{base_count:05}.png"))
                                 base_count += 1
                         all_samples.append(x_samples)
-
-                        if torch.cuda.is_available():
-                            downloadToCPU(model)
-
-                        del x_samples
 
                 if not opt.skip_grid:
                     # additionally, save as grid
