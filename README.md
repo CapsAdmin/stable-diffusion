@@ -1,5 +1,6 @@
 # Stable Diffusion
-*Stable Diffusion was made possible thanks to a collaboration with [Stability AI](https://stability.ai/) and [Runway](https://runwayml.com/) and builds upon our previous work:*
+
+_Stable Diffusion was made possible thanks to a collaboration with [Stability AI](https://stability.ai/) and [Runway](https://runwayml.com/) and builds upon our previous work:_
 
 [**High-Resolution Image Synthesis with Latent Diffusion Models**](https://ommer-lab.com/research/latent-diffusion-models/)<br/>
 [Robin Rombach](https://github.com/rromb)\*,
@@ -13,14 +14,14 @@ _[CVPR '22 Oral](https://openaccess.thecvf.com/content/CVPR2022/html/Rombach_Hig
 ![txt2img-stable2](assets/stable-samples/txt2img/merged-0006.png)
 [Stable Diffusion](#stable-diffusion-v1) is a latent text-to-image diffusion
 model.
-Thanks to a generous compute donation from [Stability AI](https://stability.ai/) and support from [LAION](https://laion.ai/), we were able to train a Latent Diffusion Model on 512x512 images from a subset of the [LAION-5B](https://laion.ai/blog/laion-5b/) database. 
-Similar to Google's [Imagen](https://arxiv.org/abs/2205.11487), 
+Thanks to a generous compute donation from [Stability AI](https://stability.ai/) and support from [LAION](https://laion.ai/), we were able to train a Latent Diffusion Model on 512x512 images from a subset of the [LAION-5B](https://laion.ai/blog/laion-5b/) database.
+Similar to Google's [Imagen](https://arxiv.org/abs/2205.11487),
 this model uses a frozen CLIP ViT-L/14 text encoder to condition the model on text prompts.
 With its 860M UNet and 123M text encoder, the model is relatively lightweight and runs on a GPU with at least 10GB VRAM.
 See [this section](#stable-diffusion-v1) below and the [model card](https://huggingface.co/CompVis/stable-diffusion).
 
-  
 ## Requirements
+
 A suitable [conda](https://conda.io/) environment named `ldm` can be created
 and activated with:
 
@@ -35,25 +36,23 @@ You can also update an existing [latent diffusion](https://github.com/CompVis/la
 conda install pytorch torchvision -c pytorch
 pip install transformers==4.19.2 diffusers invisible-watermark
 pip install -e .
-``` 
+```
 
+## THE GUI IS OUT <br>
 
-## Stable Diffusion v1
+See [GUI Usage tutorial for dummies](GUI_TUTORIAL.md)
 
-Stable Diffusion v1 refers to a specific configuration of the model
-architecture that uses a downsampling-factor 8 autoencoder with an 860M UNet
-and CLIP ViT-L/14 text encoder for the diffusion model. The model was pretrained on 256x256 images and 
-then finetuned on 512x512 images.
+## The hlky's webui version [is out](https://github.com/neonsecret/stable-diffusion-webui)
 
-*Note: Stable Diffusion v1 is a general text-to-image diffusion model and therefore mirrors biases and (mis-)conceptions that are present
-in its training data. 
-Details on the training procedure and data, as well as the intended use of the model can be found in the corresponding [model card](Stable_Diffusion_v1_Model_Card.md).*
+_Note: Stable Diffusion v1 is a general text-to-image diffusion model and therefore mirrors biases and (mis-)conceptions that are present
+in its training data.
+Details on the training procedure and data, as well as the intended use of the model can be found in the corresponding [model card](Stable_Diffusion_v1_Model_Card.md)._
 
 The weights are available via [the CompVis organization at Hugging Face](https://huggingface.co/CompVis) under [a license which contains specific use-based restrictions to prevent misuse and harm as informed by the model card, but otherwise remains permissive](LICENSE). While commercial use is permitted under the terms of the license, **we do not recommend using the provided weights for services or products without additional safety mechanisms and considerations**, since there are [known limitations and biases](Stable_Diffusion_v1_Model_Card.md#limitations-and-bias) of the weights, and research on safe and ethical deployment of general text-to-image models is an ongoing effort. **The weights are research artifacts and should be treated as such.**
 
 [The CreativeML OpenRAIL M license](LICENSE) is an [Open RAIL M license](https://www.licenses.ai/blog/2022/8/18/naming-convention-of-responsible-ai-licenses), adapted from the work that [BigScience](https://bigscience.huggingface.co/) and [the RAIL Initiative](https://www.licenses.ai/) are jointly carrying in the area of responsible AI licensing. See also [the article about the BLOOM Open RAIL license](https://bigscience.huggingface.co/blog/the-bigscience-rail-license) on which our license is based.
 
-### Weights
+# The project is completely open-source and free, and is only maintained by me. If you want to support me, I have a [ko-fi](https://ko-fi.com/neonsecret)
 
 We currently provide the following checkpoints:
 
@@ -61,20 +60,36 @@ We currently provide the following checkpoints:
   194k steps at resolution `512x512` on [laion-high-resolution](https://huggingface.co/datasets/laion/laion-high-resolution) (170M examples from LAION-5B with resolution `>= 1024x1024`).
 - `sd-v1-2.ckpt`: Resumed from `sd-v1-1.ckpt`.
   515k steps at resolution `512x512` on [laion-aesthetics v2 5+](https://laion.ai/blog/laion-aesthetics/) (a subset of laion2B-en with estimated aesthetics score `> 5.0`, and additionally
-filtered to images with an original size `>= 512x512`, and an estimated watermark probability `< 0.5`. The watermark estimate is from the [LAION-5B](https://laion.ai/blog/laion-5b/) metadata, the aesthetics score is estimated using the [LAION-Aesthetics Predictor V2](https://github.com/christophschuhmann/improved-aesthetic-predictor)).
+  filtered to images with an original size `>= 512x512`, and an estimated watermark probability `< 0.5`. The watermark estimate is from the [LAION-5B](https://laion.ai/blog/laion-5b/) metadata, the aesthetics score is estimated using the [LAION-Aesthetics Predictor V2](https://github.com/christophschuhmann/improved-aesthetic-predictor)).
 - `sd-v1-3.ckpt`: Resumed from `sd-v1-2.ckpt`. 195k steps at resolution `512x512` on "laion-aesthetics v2 5+" and 10\% dropping of the text-conditioning to improve [classifier-free guidance sampling](https://arxiv.org/abs/2207.12598).
 - `sd-v1-4.ckpt`: Resumed from `sd-v1-2.ckpt`. 225k steps at resolution `512x512` on "laion-aesthetics v2 5+" and 10\% dropping of the text-conditioning to improve [classifier-free guidance sampling](https://arxiv.org/abs/2207.12598).
 
-Evaluations with different classifier-free guidance scales (1.5, 2.0, 3.0, 4.0,
-5.0, 6.0, 7.0, 8.0) and 50 PLMS sampling
-steps show the relative improvements of the checkpoints:
-![sd evaluation results](assets/v1-variants-scores.jpg)
+## The superfast and low-vram mode have been updated. The latest results are: 2048x2048 on 8 gb vram and 3200x3200 on 24 gb.
 
+Below you can see the speed/resolution comparison table.
+<br>
+| resolution | steps | soft_limiter | time | vram | low vram mode |
+|------------ |------- |---------- |--------------- |------ |--------------- |
+| 512x512 | 50 | 100% | 1.5 minutes | 4 | no |
+| 512x512 | 50 | 100% | 36 seconds | 8 | no |
+| 512x512 | 50 | 100% | 30 seconds | 10 | no |
+| 512x512 | 50 | 100% | 15 seconds | 24 | no |
+| 1024x1024 | 50 | 100% | 15 minutes | 4 | no |
+| 1024x1024 | 50 | 100% | 4 minutes | 8 | no |
+| 1024x1024 | 50 | 100% | 3 minutes | 10 | no |
+| 1024x1024 | 50 | 100% | 70 seconds | 24 | no |
+| 2048x2048 | 50 | 100% | 25 minutes | 8 | no |
+| 2048x2048 | 50 | 100% | 20 minutes | 10 | no |
+| 2048x2048 | 50 | 100% | 15 minutes | 24 | no |
+| 512x4096 | 50 | 100% | 2 minutes | 24 | no |
+| 3840x2176 | 50 | 100% | 40 minutes | 24 | no |
+| 3200x3200 | 50 | 100% | 60 minutes | 24 | no |
+<br>
 
+gpus used: gtx 1050 ti, rtx 3070, colab gpu, rtx 3090
+(huge thanks to @therustysmear for helping me in these tests)
 
-### Text-to-Image with Stable Diffusion
-![txt2img-stable2](assets/stable-samples/txt2img/merged-0005.png)
-![txt2img-stable2](assets/stable-samples/txt2img/merged-0007.png)
+soft_limiter parameter limits vram usage, so that you can use your pc while generating images. 100% though allows the max sped.
 
 Stable Diffusion is a latent diffusion model conditioned on the (non-pooled) text embeddings of a CLIP ViT-L/14 text encoder.
 We provide a [reference script for sampling](#reference-sampling-script), but
@@ -91,18 +106,19 @@ We provide a reference sampling script, which incorporates
   of the outputs, to help viewers [identify the images as machine-generated](scripts/tests/test_watermark.py).
 
 After [obtaining the `stable-diffusion-v1-*-original` weights](#weights), link them
+
 ```
-mkdir -p models/ldm/stable-diffusion-v1/
-ln -s <path/to/model.ckpt> models/ldm/stable-diffusion-v1/model.ckpt 
-```
-and sample with
-```
-python scripts/txt2img.py --prompt "a photograph of an astronaut riding a horse" --plms 
+python optimizedSD/optimized_txt2img.py --prompt "an apple" --config_path optimizedSD/v1-inference_lowvram.yaml --H 512 --W 512 --seed 27 --n_iter 1 --n_samples 1 --ddim_steps 50
 ```
 
-By default, this uses a guidance scale of `--scale 7.5`, [Katherine Crowson's implementation](https://github.com/CompVis/latent-diffusion/pull/51) of the [PLMS](https://arxiv.org/abs/2202.09778) sampler, 
+Example gradio command:
+
+```
+python optimizedSD/neongradio_ultimate.py
+```
+
+By default, this uses a guidance scale of `--scale 7.5`, [Katherine Crowson's implementation](https://github.com/CompVis/latent-diffusion/pull/51) of the [PLMS](https://arxiv.org/abs/2202.09778) sampler,
 and renders images of size 512x512 (which it was trained on) in 50 steps. All supported arguments are listed below (type `python scripts/txt2img.py --help`).
-
 
 ```commandline
 usage: txt2img.py [-h] [--prompt [PROMPT]] [--outdir [OUTDIR]] [--skip_grid] [--skip_save] [--ddim_steps DDIM_STEPS] [--plms] [--laion400m] [--fixed_code] [--ddim_eta DDIM_ETA]
@@ -138,11 +154,13 @@ optional arguments:
   --precision {full,autocast}
                         evaluate at this precision
 ```
-Note: The inference config for all v1 versions is designed to be used with EMA-only checkpoints. 
-For this reason `use_ema=False` is set in the configuration, otherwise the code will try to switch from
-non-EMA to EMA weights. If you want to examine the effect of EMA vs no EMA, we provide "full" checkpoints
-which contain both types of weights. For these, `use_ema=False` will load and use the non-EMA weights.
 
+python optimizedSD/neongradio_ultimate.py --config_path optimizedSD/v1-inference_lowvram.yaml
+
+````
+the `--config_path optimizedSD/v1-inference_lowvram.yaml` argument enables a low-vram mode which allows to generate bigger-resolution images at the slight cost of the speed.
+
+### Description
 
 #### Diffusers Integration
 
@@ -153,57 +171,58 @@ from torch import autocast
 from diffusers import StableDiffusionPipeline
 
 pipe = StableDiffusionPipeline.from_pretrained(
-	"CompVis/stable-diffusion-v1-4", 
+	"CompVis/stable-diffusion-v1-4",
 	use_auth_token=True
 ).to("cuda")
 
 prompt = "a photo of an astronaut riding a horse on mars"
 with autocast("cuda"):
-    image = pipe(prompt)["sample"][0]  
-    
-image.save("astronaut_rides_horse.png")
-```
+    image = pipe(prompt)["sample"][0]
 
+image.save("astronaut_rides_horse.png")
+````
 
 ### Image Modification with Stable Diffusion
 
-By using a diffusion-denoising mechanism as first proposed by [SDEdit](https://arxiv.org/abs/2108.01073), the model can be used for different 
-tasks such as text-guided image-to-image translation and upscaling. Similar to the txt2img sampling script, 
-we provide a script to perform image modification with Stable Diffusion.  
+To achieve this, the stable diffusion model is fragmented into four parts which are sent to the GPU only when needed.
+After the calculation is done, they are moved back to the CPU. This allows us to run a bigger model while requiring less
+VRAM.
 
-The following describes an example where a rough sketch made in [Pinta](https://www.pinta-project.com/) is converted into a detailed artwork.
-```
-python scripts/img2img.py --prompt "A fantasy landscape, trending on artstation" --init-img <path-to-img.jpg> --strength 0.8
-```
-Here, strength is a value between 0.0 and 1.0, that controls the amount of noise that is added to the input image. 
-Values that approach 1.0 allow for lots of variations but will also produce images that are not semantically consistent with the input. See the following example.
+Also I invented the sliced atttention technique, which allows to push the model's abilities even further. It works by automatically determining the slice size from your vram and image size and then allocating it one by one accordingly.
+You can practically generate any image size, it just depends on the generation speed you are willing to sacrifice.
 
-**Input**
+<h1 align="center">Installation</h1>
 
-![sketch-in](assets/stable-samples/img2img/sketch-mountains-input.jpg)
+You can clone this repo and follow the same installation steps as the original (mainly creating the conda environment and
+placing the weights at the specified location). <br>
+So run: <br>
+`conda env create -f environment.yaml` <br>
+`conda activate ldm`
 
-**Outputs**
+<h2 align="center">Additional steps for AMD Cards</h2>
 
-![out3](assets/stable-samples/img2img/mountains-3.png)
-![out2](assets/stable-samples/img2img/mountains-2.png)
+After activating your conda environment, you have to update torch and torchvision wheels which were built with ROCm support (only on linux):
 
-This procedure can, for example, also be used to upscale samples from the base model.
+`pip3 install --upgrade torch torchvision --extra-index-url https://download.pytorch.org/whl/rocm5.1.1`
 
+<h2 align="center">Docker</h2>
 
-## Comments 
+Alternatively, if you prefer to use Docker, you can do the following:
 
-- Our codebase for the diffusion models builds heavily on [OpenAI's ADM codebase](https://github.com/openai/guided-diffusion)
-and [https://github.com/lucidrains/denoising-diffusion-pytorch](https://github.com/lucidrains/denoising-diffusion-pytorch). 
-Thanks for open-sourcing!
+1. Install [Docker](https://docs.docker.com/engine/install/)
+   , [Docker Compose plugin](https://docs.docker.com/compose/install/),
+   and [NVIDIA Container Toolkit](https://docs.nvidia.com/datacenter/cloud-native/container-toolkit/install-guide.html#docker)
+2. Clone this repo to, e.g., `~/stable-diffusion`
+3. Put your downloaded `model.ckpt` file into `~/sd-data` (it's a relative path, you can change it
+   in `docker-compose.yml`)
+4. `cd` into `~/stable-diffusion` and execute `docker compose up --build`
 
-- The implementation of the transformer encoder is from [x-transformers](https://github.com/lucidrains/x-transformers) by [lucidrains](https://github.com/lucidrains?tab=repositories). 
-
-
-## BibTeX
+This will launch gradio on port 7860 with txt2img. You can also use `docker compose run` to execute other Python
+scripts.
 
 ```
 @misc{rombach2021highresolution,
-      title={High-Resolution Image Synthesis with Latent Diffusion Models}, 
+      title={High-Resolution Image Synthesis with Latent Diffusion Models},
       author={Robin Rombach and Andreas Blattmann and Dominik Lorenz and Patrick Esser and Björn Ommer},
       year={2021},
       eprint={2112.10752},
@@ -212,4 +231,8 @@ Thanks for open-sourcing!
 }
 ```
 
+- Prompts can also be weighted to put relative emphasis on certain words.
+  eg. `--prompt tabby cat:0.25 white duck:0.75 hybrid`.
 
+- The number followed by the colon represents the weight given to the words before the colon. The weights can be both
+  fractions or integers.

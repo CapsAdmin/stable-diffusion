@@ -1,31 +1,25 @@
-import argparse, os, sys, glob
+import argparse
 import cv2
-import torch
+import glob
 import numpy as np
-from omegaconf import OmegaConf
+import os
+import sys
+import time
+import torch
 from PIL import Image
-from tqdm import tqdm, trange
+from contextlib import contextmanager, nullcontext
+from einops import rearrange
 from imwatermark import WatermarkEncoder
 from itertools import islice
-from einops import rearrange
-from torchvision.utils import make_grid
-import time
+from omegaconf import OmegaConf
 from pytorch_lightning import seed_everything
 from torch import autocast
-from contextlib import contextmanager, nullcontext
+from torchvision.utils import make_grid
+from tqdm import tqdm, trange
 
-from ldm.util import instantiate_from_config
 from ldm.models.diffusion.ddim import DDIMSampler
 from ldm.models.diffusion.plms import PLMSSampler
-
-from diffusers.pipelines.stable_diffusion.safety_checker import StableDiffusionSafetyChecker
-from transformers import AutoFeatureExtractor
-
-
-# load safety model
-safety_model_id = "CompVis/stable-diffusion-safety-checker"
-safety_feature_extractor = AutoFeatureExtractor.from_pretrained(safety_model_id)
-safety_checker = StableDiffusionSafetyChecker.from_pretrained(safety_model_id)
+from ldm.util import instantiate_from_config
 
 
 def chunk(it, size):
@@ -277,7 +271,7 @@ def main():
     if opt.fixed_code:
         start_code = torch.randn([opt.n_samples, opt.C, opt.H // opt.f, opt.W // opt.f], device=device)
 
-    precision_scope = autocast if opt.precision=="autocast" else nullcontext
+    precision_scope = autocast if opt.precision == "autocast" else nullcontext
     with torch.no_grad():
         with precision_scope("cuda"):
             with model.ema_scope():

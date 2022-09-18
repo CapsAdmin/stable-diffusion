@@ -1,0 +1,22 @@
+albumentations
+gradio>=3.3
+opencv-python
+pudb
+imageio
+imageio-ffmpeg
+pytorch-lightning
+omegaconf
+test-tube>=0.7.5
+streamlit>=0.73.1
+einops
+torch-fidelity
+transformers
+torchmetrics
+kornia
+yapf
+lpips
+tb-nightly
+git+https://github.com/crowsonkb/k-diffusion
+-e git+https://github.com/CompVis/taming-transformers.git@master#egg=taming-transformers
+-e git+https://github.com/openai/CLIP.git@main#egg=clip
+-e .
