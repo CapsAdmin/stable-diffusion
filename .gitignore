@@ -6,4 +6,8 @@ models/ldm/inpainting_big/archive/data.pkl
 latent_diffusion.egg-info
 __pycache__
 outputs/
-taming/modules/autoencoder/lpips/vgg.pth
+*.pth
+*_logs.*
+models/codeformer/
+log.txt
+tqdm.txt

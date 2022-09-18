@@ -224,12 +224,16 @@ if __name__ == '__main__':
         help="do not save individual samples. For speed measurements.",
     )
     parser.add_argument(
-        "--config_path", type=str, default="optimizedSD/v1-inference.yaml",
-        help="config path"
+        "--config",
+        type=str,
+        default="optimizedSD/v1-inference.yaml",
+        help="path to config which constructs model",
     )
     parser.add_argument(
-        "--ckpt_path", type=str, default="models/ldm/stable-diffusion-v1/model.ckpt",
-        help="checkpoint path"
+        "--ckpt",
+        type=str,
+        default="models/ldm/stable-diffusion-v1/model.ckpt",
+        help="path to checkpoint of model",
     )
     parser.add_argument(
         "--ddim_steps",
@@ -370,7 +374,7 @@ if __name__ == '__main__':
     # Logging
     logger(vars(opt), log_csv="logs/txt2img_logs.csv")
 
-    sd = load_model_from_config(f"{opt.ckpt_path}")
+    sd = load_model_from_config(f"{opt.ckpt}")
     li, lo = [], []
     for key, value in sd.items():
         sp = key.split(".")
@@ -388,7 +392,7 @@ if __name__ == '__main__':
     for key in lo:
         sd["model2." + key[6:]] = sd.pop(key)
 
-    config = OmegaConf.load(f"{opt.config_path}")
+    config = OmegaConf.load(f"{opt.config}")
 
     _model = instantiate_from_config(config.modelUNet)
     _, _ = _model.load_state_dict(sd, strict=False)
